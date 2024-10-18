@@ -1,16 +1,18 @@
-import {SafeAreaView, StyleSheet, View, Text, Image, FlatList, ActivityIndicator} from "react-native";
+import {SafeAreaView, StyleSheet, View, Image, FlatList, ActivityIndicator} from "react-native";
 import React from "react";
 import {ThemedText} from "@/app/components/ThemedText";
 import {useThemeColors} from "@/app/hooks/useThemeColors";
 import {Card} from "@/app/components/Card";
 import {PokemonCard} from "@/app/components/pokemon/PokemonCard";
-import {useFetchQuery} from "@/app/hooks/useFetchQuery";
+import {useInfiniteFetchQuery} from "@/app/hooks/useFetchQuery";
 import {getPokemonId} from "@/app/functions/pokemon";
 
 export default function Index() {
     const colors = useThemeColors();
-    const {data, isFetching} = useFetchQuery('/pokemon?limit=21');
-    const pokemons = data?.results ?? [];
+    const {data, isFetching, fetchNextPage} = useInfiniteFetchQuery('/pokemon?limit=21');
+    const pokemons = data?.pages.flatMap(
+        page => page.results
+    ) ?? [];
   return (
     <SafeAreaView style={[styles.container, {backgroundColor: colors.tint}]}>
         <View style={styles.header}>
@@ -26,6 +28,7 @@ export default function Index() {
                 ListFooterComponent={
                     isFetching ? <ActivityIndicator color={colors.tint}/> : null
                 }
+                onEndReached={() => fetchNextPage()}
                 renderItem={({item}) =>
                     <PokemonCard id={getPokemonId(item.url)} name={item.name} style={{flex: 1/3}}/>
                 }
