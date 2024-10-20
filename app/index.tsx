@@ -9,6 +9,7 @@ import {getPokemonId} from "@/app/functions/pokemon";
 import {SearchBar} from "@/app/components/SearchBar";
 import {Row} from "@/app/components/Row";
 import {SortButton} from "@/app/components/SortButton";
+import {RootView} from "@/app/components/RootView";
 
 export default function Index() {
     const colors = useThemeColors();
@@ -26,7 +27,7 @@ export default function Index() {
             : pokemons)
         ].sort((a, b) => (a[sortKey] < b[sortKey] ? -1 : 1));
   return (
-    <SafeAreaView style={[styles.container, {backgroundColor: colors.tint}]}>
+    <RootView>
         <Row style={styles.header} gap={12}>
             <Image source={require("@/assets/images/pokeball_white.png")} width={24} height={24}/>
             <ThemedText variant="headline" color="grayLight">Pokédex</ThemedText>
@@ -50,15 +51,11 @@ export default function Index() {
                 }
                 keyExtractor={(item) => item.id.toString()}/>
         </Card>
-    </SafeAreaView>
+    </RootView>
   );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 4,
-    },
     header: {
         paddingHorizontal: 12,
         paddingBottom: 8

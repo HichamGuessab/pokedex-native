@@ -4,6 +4,7 @@ import {ThemedText} from "@/app/components/ThemedText";
 import {useThemeColors} from "@/app/hooks/useThemeColors";
 import React from "react";
 import {Link} from "expo-router";
+import {getPokemonArtwork} from "@/app/functions/pokemon";
 type Props = {
     style?: ViewStyle,
     id: number,
@@ -12,21 +13,24 @@ type Props = {
 
 export function PokemonCard ({style, id, name}: Props) {
     const colors = useThemeColors();
-
-    return <Link href={{pathname: "/pokemon/[id]", params: {id: id}}} asChild>
-        <Pressable android_ripple={{color: colors.tint, foreground: true}} style={style}>
-            <Card style={[styles.card]}>
-                <ThemedText style={styles.id} variant="caption" color="grayMedium">#{id.toString().padStart(3, '0')}</ThemedText>
-                <Image
-                    source={{uri: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`}}
-                    width={72}
-                    height={72}
-                />
-                <ThemedText>{name}</ThemedText>
-                <View style={[styles.shadow, {backgroundColor: colors.grayBackground}]}/>
-            </Card>
-        </Pressable>
+    return (
+        <Link href={{pathname: "/pokemon/[id]", params: {id: id}}} asChild>
+            <Pressable android_ripple={{color: colors.tint, foreground: true}} style={style}>
+                <Card style={[styles.card]}>
+                    <ThemedText style={styles.id} variant="caption" color="grayMedium">#{id.toString().padStart(3, '0')}</ThemedText>
+                    <Image
+                        source={{
+                            uri: getPokemonArtwork(id)
+                        }}
+                        width={72}
+                        height={72}
+                    />
+                    <ThemedText>{name}</ThemedText>
+                    <View style={[styles.shadow, {backgroundColor: colors.grayBackground}]}/>
+                </Card>
+            </Pressable>
         </Link>
+    )
 }
 
 const styles = StyleSheet.create({
