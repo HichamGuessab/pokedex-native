@@ -11,13 +11,14 @@ import {Card} from "@/app/components/Card";
 import {PokemonType} from "@/app/components/pokemon/PokemonType";
 import {PokemonSpec} from "@/app/components/pokemon/PokemonSpec";
 import {PokemonStat} from "@/app/components/pokemon/PokemonStat";
-import {spec} from "node:test/reporters";
+import {Audio} from "expo-av"
 
 export default function Pokemon() {
     const colors = useThemeColors();
     const params = useLocalSearchParams() as {id: string};
     const {data:pokemon} = useFetchQuery("/pokemon/[id]", {id: params.id})
     const {data:species} = useFetchQuery("/pokemon-species/[id]", {id: params.id});
+    const id = parseInt(params.id, 10);
     const mainType = pokemon?.types?.[0].type.name;
     const colorType = mainType ? Colors.type[mainType] : colors.tint;
     const types = pokemon?.types ?? [];
@@ -27,6 +28,26 @@ export default function Pokemon() {
         })
         ?.flavor_text.replaceAll("\n", " ");
     const stats = pokemon?.stats ?? basePokemonStats;
+    const onImagePress = async () => {
+        const cry = pokemon?.cries.latest;
+        if (!cry) {
+            return;
+        }
+        const {sound} = await Audio.Sound.createAsync({
+            uri: cry
+        }, {shouldPlay: true})
+        await sound.playAsync();
+    }
+    const onPrevious = () => {
+        router.replace({pathname: '/pokemon/[id]', params: {id: Math.max(id - 1, 1)}})
+    }
+
+    const onNext = () => {
+        router.replace({pathname: '/pokemon/[id]', params: {id: Math.min(id + 1, 700)}})
+    }
+
+    const isFirst = id == 1;
+    const isLast = id == 700;
     return (
         <RootView backgroundColor={colorType}>
             <View>
@@ -51,37 +72,55 @@ export default function Pokemon() {
                         #{params.id.padStart(3, "0")}
                     </ThemedText>
                 </Row>
-                <View style={styles.body}>
-                    <Image
-                        style={styles.artwork}
-                        source={{
-                            uri : getPokemonArtwork(params.id),
-                        }}
-                        width={200}
-                        height={200}
-                    />
-                    <Card style={styles.card}>
-                        <Row gap={16} style={{height: 20}}>
-                            {types.map(type => <PokemonType name={type.type.name} key={type.type.name}/>)}
-                        </Row>
+                <Card style={styles.card}>
+                    <Row style={styles.imageRow}>
+                        { isFirst ? (
+                            <View style={{width: 24, height: 24}}></View>
+                        ) : (
+                            <Pressable onPress={onPrevious}>
+                                <Image width={24} height={24} source={require('@/assets/images/previous.png')}></Image>
+                            </Pressable>
+                        )
+                        }
+                        <Pressable onPress={onImagePress}>
+                            <Image
+                                style={styles.artwork}
+                                source={{
+                                    uri : getPokemonArtwork(params.id),
+                                }}
+                                width={200}
+                                height={200}
+                            />
+                        </Pressable>
+                        { isLast ? (
+                            <View style={{width: 24, height: 24}}></View>
+                        ) : (
+                            <Pressable onPress={onNext}>
+                                <Image width={24} height={24} source={require('@/assets/images/next.png')}></Image>
+                            </Pressable>
+                        )
+                        }
+                    </Row>
+                    <Row gap={16} style={{height: 20}}>
+                        {types.map(type => <PokemonType name={type.type.name} key={type.type.name}/>)}
+                    </Row>
 
-                        {/* About */}
-                        <ThemedText variant={"subtitle1"} style={{color: colorType}}>About</ThemedText>
-                        <Row gap={16}>
-                            <PokemonSpec style={{borderStyle: 'solid', borderRightWidth: 1, borderColor: colors.grayLight}} title={formatWeight(pokemon?.weight)} description="Weight" image={require("@/assets/images/weight.png")}/>
-                            <PokemonSpec style={{borderStyle: 'solid', borderRightWidth: 1, borderColor: colors.grayLight}} title={formatSize(pokemon?.weight)} description="Size" image={require("@/assets/images/size.png")}/>
-                            <PokemonSpec title={pokemon?.moves.slice(0,2).map((m) => m.move.name).join('\n')} description="Moves"/>
-                        </Row>
-                        <ThemedText>{bio}</ThemedText>
+                    {/* About */}
+                    <ThemedText variant={"subtitle1"} style={{color: colorType}}>About</ThemedText>
+                    <Row gap={16}>
+                        <PokemonSpec style={{borderStyle: 'solid', borderRightWidth: 1, borderColor: colors.grayLight}} title={formatWeight(pokemon?.weight)} description="Weight" image={require("@/assets/images/weight.png")}/>
+                        <PokemonSpec style={{borderStyle: 'solid', borderRightWidth: 1, borderColor: colors.grayLight}} title={formatSize(pokemon?.weight)} description="Size" image={require("@/assets/images/size.png")}/>
+                        <PokemonSpec title={pokemon?.moves.slice(0,2).map((m) => m.move.name).join('\n')} description="Moves"/>
+                    </Row>
+                    <ThemedText>{bio}</ThemedText>
 
-                        {/* Stats */}
-                        <ThemedText variant={"subtitle1"} style={{color: colorType}}>Base stats</ThemedText>
+                    {/* Stats */}
+                    <ThemedText variant={"subtitle1"} style={{color: colorType}}>Base stats</ThemedText>
 
-                        <View style={{ alignSelf: "stretch"}}>
-                            {stats.map(stat => <PokemonStat key={stat.stat.name} name={stat.stat.name} value={stat.base_stat} color={colorType}/>)}
-                        </View>
-                    </Card>
-                </View>
+                    <View style={{ alignSelf: "stretch"}}>
+                        {stats.map(stat => <PokemonStat key={stat.stat.name} name={stat.stat.name} value={stat.base_stat} color={colorType}/>)}
+                    </View>
+                </Card>
             </View>
         </RootView>
     )
@@ -98,16 +137,18 @@ const styles = StyleSheet.create({
         right: 8,
         top: 8,
     },
-    artwork: {
+    imageRow: {
         position: "absolute",
         top: -140,
-        alignSelf: "center",
-        zIndex: 2
+        zIndex: 2,
+        justifyContent: "space-between",
+        left: 0,
+        right: 0,
+        paddingHorizontal: 20
     },
-    body: {
-        marginTop: 144,
-    },
+    artwork: {},
     card: {
+        marginTop: 144,
         paddingHorizontal: 20,
         paddingTop: 60,
         paddingBottom: 20,
