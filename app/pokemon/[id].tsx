@@ -6,7 +6,7 @@ import {ThemedText} from "@/app/components/ThemedText";
 import {useFetchQuery} from "@/app/hooks/useFetchQuery";
 import {Colors} from "@/app/constants/Colors";
 import {useThemeColors} from "@/app/hooks/useThemeColors";
-import {formatSize, formatWeight, getPokemonArtwork} from "@/app/functions/pokemon";
+import {basePokemonStats, formatSize, formatWeight, getPokemonArtwork} from "@/app/functions/pokemon";
 import {Card} from "@/app/components/Card";
 import {PokemonType} from "@/app/components/pokemon/PokemonType";
 import {PokemonSpec} from "@/app/components/pokemon/PokemonSpec";
@@ -26,8 +26,9 @@ export default function Pokemon() {
             return language.name == "en";
         })
         ?.flavor_text.replaceAll("\n", " ");
+    const stats = pokemon?.stats ?? basePokemonStats;
     return (
-        <RootView style={{backgroundColor: colorType}}>
+        <RootView backgroundColor={colorType}>
             <View>
                 <Image style={styles.pokeball} source={require('@/assets/images/big_pokeball.png')} width={208} height={208}></Image>
                 <Row style={styles.header}>
@@ -60,7 +61,7 @@ export default function Pokemon() {
                         height={200}
                     />
                     <Card style={styles.card}>
-                        <Row gap={16}>
+                        <Row gap={16} style={{height: 20}}>
                             {types.map(type => <PokemonType name={type.type.name} key={type.type.name}/>)}
                         </Row>
 
@@ -77,7 +78,7 @@ export default function Pokemon() {
                         <ThemedText variant={"subtitle1"} style={{color: colorType}}>Base stats</ThemedText>
 
                         <View style={{ alignSelf: "stretch"}}>
-                            {pokemon?.stats.map(stat => <PokemonStat key={stat.stat.name} name={stat.stat.name} value={stat.base_stat} color={colorType}/>)}
+                            {stats.map(stat => <PokemonStat key={stat.stat.name} name={stat.stat.name} value={stat.base_stat} color={colorType}/>)}
                         </View>
                     </Card>
                 </View>
